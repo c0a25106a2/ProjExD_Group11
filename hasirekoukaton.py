@@ -16,6 +16,9 @@ pg.display.set_caption("こうかとんランゲーム")
 # カラー定義
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+GRAY = (180, 180, 180)
+GREEN = (50, 220, 50)
+RED = (255, 80, 80)
 
 # フレームレート管理
 clock = pg.time.Clock()
@@ -58,11 +61,57 @@ class Player:
         self.jump_velocity = 15  # 初速度
         self.velocity_y = 0
         self.gravity = 0.75       # 重力
+        self.double_jump_ready = False  # 2段ジャンプ可能回数
+        self.jump_gauge = 0
+        self.jump_gauge_max = 500
 
     def jump(self):
         if not self.is_jumping:
             self.is_jumping = True
             self.velocity_y = -self.jump_velocity
+        elif self.double_jump_ready == True:
+            self.double_jump_ready = False
+            self.jump_gauge = 0
+            self.velocity_y = -self.jump_velocity * 0.9
+
+    def draw_jump_gauge(self, screen):
+        """2段ジャンプのゲージを描画する関数"""
+        # ゲージ背景
+        jump_gauge_x = 5
+        jump_gauge_y = 250
+        jump_gauge_width = 90
+        jump_gauge_height = 20
+
+        pg.draw.rect(
+            screen,
+            GRAY,
+            (jump_gauge_x, jump_gauge_y, jump_gauge_width, jump_gauge_height)
+        )
+
+        # ゲージ本体
+        current_width = (
+            jump_gauge_width * self.jump_gauge / self.jump_gauge_max
+        )
+
+        color = GREEN
+
+        # MAX時は赤色
+        if self.double_jump_ready:
+            color = RED
+
+        pg.draw.rect(
+            screen,
+            color,
+            (jump_gauge_x, jump_gauge_y, current_width, jump_gauge_height)
+        )
+
+        # 枠線
+        pg.draw.rect(
+            screen,
+            BLACK,
+            (jump_gauge_x, jump_gauge_y, jump_gauge_width, jump_gauge_height),
+            3
+        )
 
     def update(self):
         if self.is_jumping:
@@ -74,6 +123,14 @@ class Player:
                 self.y = self.y_floor
                 self.is_jumping = False
                 self.velocity_y = 0
+
+        # 2段ジャンプゲージ蓄積
+        if self.velocity_y == 0:
+            if self.jump_gauge < self.jump_gauge_max:
+                self.jump_gauge += 1
+            
+            if self.jump_gauge >= self.jump_gauge_max:
+                    self.double_jump_ready = True
 
     def draw(self):
         # 正しい縦横比に修正された run.png を表示
@@ -165,6 +222,7 @@ def main():
         player.draw()
         for obstacle in obstacles:
             obstacle.draw()
+        player.draw_jump_gauge(screen)
 
         # スコア表示
         try:
