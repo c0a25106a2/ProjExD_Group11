@@ -16,8 +16,8 @@ pg.display.set_caption("こうかとんランゲーム")
 # カラー定義
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-RED = (255, 0, 0)  #無敵UI用の赤
-CYAN = (0, 255, 255)  #無敵エフェクト・ゲージ用の水色
+RED = (255, 0, 0)  #無敵UI用の赤 #追加
+CYAN = (0, 255, 255)  #無敵エフェクト・ゲージ用の水色 #追加
 
 # フレームレート管理
 clock = pg.time.Clock()
@@ -60,11 +60,11 @@ class Player:
         self.jump_velocity = 15  # 初速度
         self.velocity_y = 0
         self.gravity = 0.75       # 重力
-        # 無敵関係
-        self.invincible_count = 3  #無敵の回数
-        self.invincible_timer = 0  #無敵の効果時間
-        self.is_invincible = False #無敵時間かどうか
-        self.blink_timer = 0 #点滅エフェクト
+        # 無敵関係 #追加
+        self.invincible_count = 3  #無敵の回数 #追加
+        self.invincible_timer = 0  #無敵の効果時間 #追加
+        self.is_invincible = False #無敵時間かどうか #追加
+        self.blink_timer = 0 #点滅エフェクト #追加
 
     def jump(self):
         if not self.is_jumping:
@@ -72,7 +72,7 @@ class Player:
             self.velocity_y = -self.jump_velocity
     
     def activate_invincible(self):
-        #無敵発動メゾット
+        #無敵発動メゾット #追加
         if not self.is_invincible and self.invincible_count > 0:
             self.is_invincible = True
             self.invincible_count -= 1
@@ -89,7 +89,7 @@ class Player:
                 self.is_jumping = False
                 self.velocity_y = 0
 
-        #無敵タイマーの更新
+        #無敵タイマーの更新 #追加
         if self.is_invincible:
             self.invincible_timer -= 1
             self.blink_timer += 1
@@ -98,7 +98,7 @@ class Player:
                 self.invincible_timer = 0
 
     def draw(self):
-        #無敵状態なら点滅
+        #無敵状態なら点滅 #追加
         if self.is_invincible and (self.blink_timer // 4) % 2 == 0:
             pass
         else:
@@ -148,7 +148,7 @@ def main():
     
     game_over = False
     font = pg.font.Font(None, 40)
-    small_font = pg.font.SysFont("msgothic", 30)  #無敵表示用のフォント
+    small_font = pg.font.SysFont("msgothic", 30)  #無敵表示用のフォント #追加
 
 
     while True:
@@ -165,7 +165,7 @@ def main():
                         return
                     else:
                         player.jump()
-                #左シフトキーで無敵発動
+                #左シフトキーで無敵発動 #追加
                 if event.key == pg.K_LSHIFT and not game_over:
                     player.activate_invincible()
 
@@ -186,7 +186,7 @@ def main():
                 obstacle.update()
                 if obstacle.x + obstacle.width < 0:
                     obstacles.remove(obstacle)
-                #プレイヤーが無敵の時は衝突判定をスルー
+                #プレイヤーが無敵の時は衝突判定をスルー #追加
                 if player.get_rect().colliderect(obstacle.get_rect()):
                     if not player.is_invincible:
                         game_over = True
@@ -205,10 +205,10 @@ def main():
         try:
             score_text = font.render(f"Score: {score}", True, BLACK)
             screen.blit(score_text, (10, 10))
-            #無敵回数の表示
+            #無敵回数の表示 #追加
             inv_text = small_font.render(f"無敵 (LShift): {player.invincible_count}", True, RED if player.invincible_count == 0 else BLACK)
             screen.blit(inv_text, (10, 45))
-            #無敵発動中の残り時間ゲージ表示
+            #無敵発動中の残り時間ゲージ表示 #追加
             gauge_width = int((player.invincible_timer / 180) * 100)
             pg.draw.rect(screen, BLACK, (10, 75, 100, 10), 1) # 枠線
             pg.draw.rect(screen, CYAN, (11, 76, gauge_width - 2, 8)) # 中身
