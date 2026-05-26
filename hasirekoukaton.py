@@ -179,6 +179,8 @@ class Obstacle:
         self.y = SCREEN_HEIGHT - 80 - self.height
         self.speed = speed
 
+        self.passed = False
+
     def update(self):
         self.x -= self.speed  # 左へ自動移動
 
@@ -188,12 +190,27 @@ class Obstacle:
     def get_rect(self):
         return pg.Rect(self.x, self.y, self.width, self.height)
 
+class ScorePopup:
+    """スコア加算時に一時的に表示されるテキストのエフェクト"""
+    def __init__(self, x, y, text):
+        self.x = x
+        self.y = y
+        self.text = text
+        self.timer = 30
+    
+    def update(self):
+        self.timer -= 1
+        self.y -= 0.5
+    def is_dead(self):
+        return self.timer <= 0
+
 
 # --- メインゲームループ ---
 def main():
     player = Player()
     obstacles = []
-    
+    popups = []
+
     # スコア機能
     score = 0
     game_speed = 7
@@ -236,9 +253,18 @@ def main():
                 spawn_timer = 0
                 next_spawn_time = random.randint(50, 100)
 
-            # 障害物の移動と衝突判定
+            # 障害物の移動と衝突判定・スコア判定
             for obstacle in obstacles[:]:
                 obstacle.update()
+                
+                # 障害物がプレイヤーを通り過ぎた瞬間の判定
+                if not obstacle.passed and (obstacle.x + obstacle.width < player.x):
+                    score += 100
+                    obstacle.passed = True
+                    
+                    # スコア表示の右側に "+100" ポップアップを生成
+                    popups.append(ScorePopup(160, 10, "+100"))
+                
                 if obstacle.x + obstacle.width < 0:
                     obstacles.remove(obstacle)
                 #プレイヤーが無敵の時は衝突判定をスルー #追加
@@ -246,6 +272,12 @@ def main():
                     if not player.is_invincible:
                         game_over = True
                     
+
+            # ポップアップの更新と寿命が尽きたものの削除
+            for popup in popups[:]:
+                popup.update()
+                if popup.is_dead():
+                    popups.remove(popup)
 
         # --- 描画処理 ---
         # 背景画像（pg_bg.jpg）を描画
@@ -270,6 +302,14 @@ def main():
             pg.draw.rect(screen, CYAN, (11, 76, gauge_width - 2, 8)) # 中身
         except:
             pass
+
+        # ポップアップの描画
+        for popup in popups:
+            try:
+                popup_text = font.render(popup.text, True, (255,255,0))
+                screen.blit(popup_text, (popup.x, popup.y))
+            except:
+                pass
 
         # ゲームオーバー画面
         if game_over:
